@@ -1,15 +1,8 @@
-# Contributing to `my-awesome-package`
+# Contributing to `riscript`
 
 Thank you for your interest in this project and your aims to improving it.
 This guide will give you the most important info on how to contribute properly
 in order to get your pull requests accepted.
-
-## Disclose security vulnerabilities
-
-First things first: We appreciate every help to improve security!
-
-**However, please read our [security policy](./SECURITY.md), before taking 
-actions.**
 
 ## Guiding principles
 
@@ -31,8 +24,8 @@ and discuss, whether this is a useful addition to the project.
 First, clone and install this project from source via
 
 ```bash
-$ git clone git@github.com:me/my-project.git
-$ cd my-project
+$ git clone git@github.com:me/riscript.git
+$ cd riscript
 $ npm install
 ```
 
