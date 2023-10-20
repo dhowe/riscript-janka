@@ -16834,8 +16834,6 @@ class RiScriptParser extends CstParser {
   }
 }
 
-let RiScript$1; // refactor
-
 class BaseVisitor {
   constructor(riScript) {
     this.input = 0;
@@ -16843,7 +16841,7 @@ class BaseVisitor {
     this.tracePath = true;
     this.scripting = riScript;
     this.warnOnInvalidGates = false;
-    RiScript$1 = this.scripting.constructor; // class hack
+    this.RiScript = this.scripting.constructor; // class hack
   }
   isCstNode(o) {
     return (
@@ -16872,12 +16870,12 @@ class BaseVisitor {
     if (typeof this[name] !== 'function')
       throw Error(
         'BaseVisitor.visit: expecting function for this[' +
-          name +
-          '],' +
-          ' found ' +
-          typeof this[name] +
-          ': ' +
-          JSON.stringify(this[name])
+        name +
+        '],' +
+        ' found ' +
+        typeof this[name] +
+        ': ' +
+        JSON.stringify(this[name])
       );
 
     if (this.tracePath && !/(expr|atom|silent)/.test(name)) {
@@ -16892,11 +16890,11 @@ class BaseVisitor {
 
 class RiScriptVisitor extends BaseVisitor {
   constructor(riScript, context = {}) {
-    super(riScript);
+
+    super(riScript); // stored as global RiScript (TODO)
     this.context = context;
 
     this.trace = 0;
-    this.nolog = 0;
     this.choices = {};
     this.isNoRepeat = false;
     this.symbols = this.scripting.Symbols;
@@ -16921,14 +16919,10 @@ class RiScriptVisitor extends BaseVisitor {
 
   script(ctx) {
     this.order = 0;
-    this.nolog =
-      this.nolog ||
-      typeof RiScript$1.RiTa === 'undefined' ||
-      RiScript$1.RiTa.SILENT;
     let count = ctx.expr ? ctx.expr.length : 0;
     this.print(
       'script',
-      "'" + RiScript$1.escapeText(this.input) + "' :: " + count + ' expression(s)'
+      "'" + this.RiScript.escapeText(this.input) + "' :: " + count + ' expression(s)'
     );
     if (!count) return '';
     if (Object.keys(ctx).length !== 1) throw Error('script: invalid expr');
@@ -16965,12 +16959,12 @@ class RiScriptVisitor extends BaseVisitor {
     let mingoQuery,
       raw = ctx.Gate[0].image;
     try {
-      mingoQuery = new RiScript$1.Query(this.scripting, raw);
+      mingoQuery = this.scripting._query(raw);
     } catch (e) {
       if (!this.warnOnInvalidGates) {
         throw Error(`Invalid gate[2]: "@${raw}@"\n\nRootCause -> ${e}`);
       }
-      if (!this.scripting.parent || !this.scripting.parent.SILENT) {
+      if (!this.scripting.RiTa.SILENT && !this.scripting.silent) {
         console.warn(`[WARN] Ignoring invalid gate: @${raw}@\n`, e);
       }
       return { decision: 'accept' };
@@ -17045,9 +17039,8 @@ class RiScriptVisitor extends BaseVisitor {
               : ''
           );
       }
-      info = `${sym} = ${RiScript$1.escapeText(value)} [#static] ${
-        opts?.silent ? '{silent}' : ''
-      }`;
+      info = `${sym} = ${this.RiScript.escapeText(value)}`
+        + ` [#static] ${opts?.silent ? '{silent}' : ''}`;
     } else {
       let $ = this;
 
@@ -17066,7 +17059,6 @@ class RiScriptVisitor extends BaseVisitor {
   }
 
   silent(ctx) {
-    // this.print('silent')
     if (ctx.EQ) {
       this.assign(ctx, { silent: true });
     } else {
@@ -17100,7 +17092,7 @@ class RiScriptVisitor extends BaseVisitor {
     if (ctx.Raw.length !== 1) throw Error('[1] invalid text');
     if (Object.keys(ctx).length !== 1) throw Error('[2] invalid text');
     let image = ctx.Raw[0].image;
-    this.print('text', RiScript$1.escapeText("'" + image + "'"));
+    this.print('text', this.RiScript.escapeText("'" + image + "'"));
     return image;
   }
 
@@ -17129,7 +17121,7 @@ class RiScriptVisitor extends BaseVisitor {
       if (!this.scripting.EntityRE.test(symbol)) {
         throw Error(
           `Attempt to refer to dynamic symbol '${ident}' as` +
-            ` ${this.symbols.STATIC}${ident}, did you mean $${ident}?`
+          ` ${this.symbols.STATIC}${ident}, did you mean $${ident}?`
         );
       }
     }
@@ -17146,17 +17138,17 @@ class RiScriptVisitor extends BaseVisitor {
         'Attempt to call norepeat() on ' +
         (isStatic
           ? "static symbol '" +
-            symbol +
-            "'. Did you mean to use '" +
-            this.symbols.DYNAMIC +
-            ident +
-            "' ?"
+          symbol +
+          "'. Did you mean to use '" +
+          this.symbols.DYNAMIC +
+          ident +
+          "' ?"
           : "non-dynamic symbol '" +
-            ident +
-            "'. Did you mean to define '" +
-            this.symbols.DYNAMIC +
-            ident +
-            "' in riscript?");
+          ident +
+          "'. Did you mean to define '" +
+          this.symbols.DYNAMIC +
+          ident +
+          "' in riscript?");
       throw Error(msg);
     }
 
@@ -17171,18 +17163,14 @@ class RiScriptVisitor extends BaseVisitor {
       return original;
     }
 
-    let info =
-      original + " -> '" + result + "'" + (opts?.silent ? ' {silent}' : '');
+    let info = original + " -> '" + result + "'" + (opts?.silent ? ' {silent}' : '');
 
     // defer if we still have unresolved riscript
     if (typeof result === 'string' && !resolved) {
       if (isStatic) {
         this.pendingSymbols.add(ident);
         result = this.inlineAssignment(ident, ctx.TF, result);
-        this.print(
-          'symbol*',
-          `${original} -> ${result} :: pending.add(${ident})`
-        );
+        this.print('symbol*', `${original} -> ${result} :: pending.add(${ident})`);
       } else {
         if (ctx.TF) result = this.restoreTransforms(result, ctx.TF);
         this.print('symbol', info);
@@ -17207,12 +17195,8 @@ class RiScriptVisitor extends BaseVisitor {
 
     // resolved, so remove from pending
     if (this.pendingSymbols.has(ident)) {
-      this.trace &&
-        console.log(
-          '  [$pending.delete]',
-          (isStatic ? '#' : '$') + ident,
-          this.pendingSymbols.length ? JSON.stringify(this.pendingSymbols) : ''
-        );
+      this.trace && console.log('  [$pending.delete]', (isStatic ? '#' : '$') + ident,
+          this.pendingSymbols.length ? JSON.stringify(this.pendingSymbols) : '');
       this.pendingSymbols.delete(ident);
     }
     this.isNoRepeat = false; // reset
@@ -17230,9 +17214,9 @@ class RiScriptVisitor extends BaseVisitor {
     if (!lookup)
       throw Error(
         'no pending gate="' +
-          original +
-          '" pgates=' +
-          JSON.stringify(Object.keys(this.pendingGates))
+        original +
+        '" pgates=' +
+        JSON.stringify(Object.keys(this.pendingGates))
       );
 
     let stillUnresolved = lookup.operands.some((o) => {
@@ -17261,12 +17245,12 @@ class RiScriptVisitor extends BaseVisitor {
     let rawGate, gateResult;
     let original = this.nodeText,
       info = original;
-    let choiceKey = RiScript$1.stringHash(original + ' #' + this.choiceId(ctx));
+    let choiceKey = this.RiScript.stringHash(original + ' #' + this.choiceId(ctx));
 
     if (!this.isNoRepeat && this.hasNoRepeat(ctx.TF))
       throw Error(
         'noRepeat() not allowed on choice (use a $variable instead): ' +
-          original
+        original
       );
 
     let decision = 'accept';
@@ -17278,11 +17262,10 @@ class RiScriptVisitor extends BaseVisitor {
         rawGate = ctx.gate[0].children.Gate[0].image;
         gateResult = this.visit(ctx.gate);
         decision = gateResult.decision;
-        info += `\n  [gate] ${rawGate} -> ${
-          decision !== 'defer'
-            ? decision.toUpperCase()
-            : `DEFER ${$.PENDING_GATE}${choiceKey}`
-        }  ${this.lookupsToString()}`;
+        info += `\n  [gate] ${rawGate} -> ${decision !== 'defer'
+          ? decision.toUpperCase()
+          : `DEFER ${$.PENDING_GATE}${choiceKey}`
+          }  ${this.lookupsToString()}`;
       }
 
       if (gateResult) {
@@ -17337,7 +17320,7 @@ class RiScriptVisitor extends BaseVisitor {
   // Helpers ================================================
 
   hasNoRepeat(tfs) {
-    let transforms = RiScript$1.transformNames(tfs);
+    let transforms = this.RiScript.transformNames(tfs);
     if (transforms.length) {
       return transforms.includes('nr') || transforms.includes('norepeat');
     }
@@ -17452,12 +17435,10 @@ class RiScriptVisitor extends BaseVisitor {
       throw Error('Invalid choice: no valid options');
     }
 
-    let index = RiScript$1.RiTa // use RiTa for randomSeed
-      ? RiScript$1.RiTa.randi(valid.length)
-      : Math.floor(Math.random() * valid.length);
+    let index = this.scripting.RiTa.randi(valid.length);
 
-    let value = '',
-      selected = valid[index];
+    let value = '', selected = valid[index];
+
     if (typeof selected === 'string') {
       this.print('choice.text', "''");
     } else {
@@ -17541,21 +17522,21 @@ class RiScriptVisitor extends BaseVisitor {
     }
 
     // function in transforms
-    else if (typeof RiScript$1.transforms[tx] === 'function') {
-      result = RiScript$1.transforms[tx](target);
+    else if (typeof this.RiScript.transforms[tx] === 'function') {
+      result = this.RiScript.transforms[tx](target);
     }
     // member functions (usually on String)
     else if (typeof target[tx] === 'function') {
       result = target[tx]();
-      // if (target === '' && result === '') { // why was this here ?
-      //   if (!this.nolog) console.warn("[WARN] Unresolved transform[0]: " + raw);
-      // }
+
     } else {
       // check for property
       if (target.hasOwnProperty(tx)) {
         result = target[tx];
       } else {
-        if (!this.nolog) console.warn('[WARN] Unresolved transform: ' + raw);
+        if (!this.scripting.RiTa.SILENT && !this.scripting.silent) {
+          console.warn('[WARN] Unresolved transform: ' + raw);
+        }
 
         /* Replace transform parens so as not to trigger
            RiScript.isParseable (for example, in v2) 0*/
@@ -17633,7 +17614,7 @@ class RiQuery extends Query {
   constructor(scripting, condition, options) {
     if (typeof condition === 'string') {
       condition = scripting.parseJSOL(condition);
-      // console.log('RAW: ',raw, 'parsed', query);
+      //console.log('RAW: ', raw, 'parsed', condition);
     }
     super(condition, options);
   }
@@ -17663,44 +17644,39 @@ class RiQuery extends Query {
 }
 
 class RiScript {
+
   static Query = RiQuery;
-
-  static RiTa = {
-    VERSION: 0,
-    randi: (k) => Math.floor(Math.random() * k),
-  };
-
   static RiTaWarnings = { plurals: false, phones: false };
 
-  constructor(opts = {}) {
-    // private ?
-
-    this.visitor = 0; // created in evaluate() or passed in
+  static evaluate(script, context, opts = {}) {
+    return new RiScript().evaluate(script, context, opts);
+  }
+  constructor(opts = {}) { // private ?
+    this.visitor = 0; // created in evaluate() or passed in here
     this.v2Compatible = opts.compatibility === 2;
     let { Constants, tokens } = getTokens(this.v2Compatible);
     this.Escaped = Constants.Escaped;
     this.Symbols = Constants.Symbols;
 
     let anysym = Constants.Escaped.STATIC + Constants.Escaped.DYNAMIC;
-    let open = Constants.Escaped.OPEN_CHOICE,
-      close = Constants.Escaped.CLOSE_CHOICE;
+    let open = Constants.Escaped.OPEN_CHOICE, close = Constants.Escaped.CLOSE_CHOICE;
 
-    this.JSOLIdentRE = new RegExp(
-      `([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`,
-      'g'
-    );
+    this.JSOLIdentRE = new RegExp(`([${anysym}]?[A-Za-z_0-9][A-Za-z_0-9]*)\\s*:`, 'g');
     this.RawAssignRE = new RegExp(`^[${anysym}][A-Za-z_0-9][A-Za-z_0-9]*\\s*=`);
-    this.ChoiceWrapRE = new RegExp(
-      '^' + open + '[^' + open + close + ']*' + close + '$'
-    );
+    this.ChoiceWrapRE = new RegExp('^' + open + '[^' + open + close + ']*' + close + '$');
 
     this.SpecialRE = new RegExp(`[${this.Escaped.SPECIAL.replace('&', '')}]`);
     this.ContinueRE = new RegExp(this.Escaped.CONTINUATION + '\\r?\\n', 'g');
     this.WhitespaceRE = /[\u00a0\u2000-\u200b\u2028-\u2029\u3000]+/g;
     this.AnySymbolRE = new RegExp(`[${anysym}]`); // added
 
+    this.silent = false;
     this.lexer = new Lexer(tokens);
     this.parser = new RiScriptParser(tokens);
+    this.RiTa = opts.RiTa || {
+      VERSION: 0,
+      randi: (k) => Math.floor(Math.random() * k),
+    };
   }
 
   lex(opts) {
@@ -17730,10 +17706,6 @@ class RiScript {
     return this.visit(opts);
   }
 
-  static evaluate(script, context, opts = {}) {
-    return new RiScript().evaluate(script, context, opts);
-  }
-
   evaluate(script, context, opts = {}) {
     if (typeof script !== 'string') {
       throw Error('RiScript.evaluate() expects a string, got ' + typeof script);
@@ -17749,16 +17721,15 @@ class RiScript {
 
     // opts.onepass = true; // TMP
 
-    let last,
-      ritaSilent = RiScript.RiTa?.SILENT;
-    let endingBreak = /\r?\n$/.test(input); // keep
+    let last, endingBreak = /\r?\n$/.test(input); // keep
 
     let expr = this.preParse(input, opts);
     if (!expr) return '';
 
     if (opts.trace) console.log(`\nInput:  '${RiScript.escapeText(input)}'`);
-    if (opts.trace && input !== expr)
+    if (opts.trace && input !== expr) {
       console.log(`Parsed: '${RiScript.escapeText(expr)}'`);
+    }
 
     if (!opts.visitor) throw Error('no visitor');
     this.visitor = opts.visitor;
@@ -17786,34 +17757,31 @@ class RiScript {
     }
 
     // check for unresolved symbols ([$#]) after removing HTML entities
-    if (
-      !opts.silent &&
-      !ritaSilent &&
-      this.AnySymbolRE.test(expr.replace(HtmlEntities, ''))
-    ) {
-      console.warn(
-        '[WARN] Unresolved symbol(s) in "' + expr.replace(/\n/g, '\\n') + '" '
-      );
+    if (!this.silent && !this.RiTa.SILENT) {
+      if (this.AnySymbolRE.test(expr.replace(HtmlEntities, ''))) {
+        console.warn('[WARN] Unresolved symbol(s) in "' + expr.replace(/\n/g, '\\n') + '" ');
+      }
     }
 
     return this.postParse(expr, opts) + (endingBreak ? '\n' : '');
   }
 
+  _query(rawQuery, opts) {
+    return new RiQuery(this, rawQuery, opts);
+  }
+
   printTokens(tokens) {
-    let s = tokens
-      .reduce((str, t) => {
-        let { name } = t.tokenType;
-        let tag = name;
-        if (tag === 'TEXT') tag = RiScript.escapeText(t.image, 1);
-        if (tag === 'SYM') tag = 'sym(' + t.image + ')';
-        if (tag === 'TX') tag = 'tx(' + t.image + ')';
-        return str + tag + ', ';
-      }, '')
+    let s = tokens.reduce((str, t) => {
+      let { name } = t.tokenType;
+      let tag = name;
+      if (tag === 'TEXT') tag = RiScript.escapeText(t.image, 1);
+      if (tag === 'SYM') tag = 'sym(' + t.image + ')';
+      if (tag === 'TX') tag = 'tx(' + t.image + ')';
+      return str + tag + ', ';
+    }, '')
       .slice(0, -2);
-    console.log(
-      '\nTokens: [ ' + s + ' ]  Context:',
-      this.visitor.lookupsToString()
-    );
+    console.log('\nTokens: [ ' + s + ' ]  Context:',
+      this.visitor.lookupsToString());
   }
 
   postParse(input, opts) {
@@ -17958,16 +17926,6 @@ class RiScript {
     );
   }
 
-  // static addTransform(name, func) {
-  //   RiScript.transforms[name] = func;
-  //   return RiScript.transforms;
-  // }
-
-  // static addTransform(name, func) {
-  //   RiScript.transforms[name] = func;
-  //   return RiScript.transforms;
-  // }
-
   static stringHash(s) {
     let chr,
       hash = 0;
@@ -18023,7 +17981,7 @@ class RiScript {
     if (!RiScript.RiTa?.pluralize) {
       if (!RiScript.RiTaWarnings.plurals) {
         RiScript.RiTaWarnings.plurals = true;
-        console.warn('[WARN] RiTa is required for proper pluralization');
+        console.warn('[WARN] Install RiTa for proper pluralization');
       }
       return s.endsWith('s') ? s : s + 's';
     }
@@ -18063,15 +18021,15 @@ RiScript.transforms = {
   s: RiScript.pluralize,
 };
 
-(async function () {
-  let loaded;
-  try {
-    loaded = await import(/*webpackIgnore: true*/'rita');
-    if (loaded && loaded?.default) RiScript.RiTa = loaded.default;
-  } catch (error) {
-    // console.warn('[WARN] Unable to load RiTa:', error?.message);
-  }
-})();
+// (async function () {
+//   let loaded;
+//   try {
+//     loaded = await import(/*webpackIgnore: true*/'rita');
+//     if (loaded && loaded?.default) RiScript.RiTa = loaded.default;
+//   } catch (error) {
+//     // console.warn('[WARN] Unable to load RiTa:', error?.message);
+//   }
+// })();
 
 RiScript.Visitor = RiScriptVisitor;
 
