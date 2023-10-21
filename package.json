@@ -3,19 +3,18 @@
   "version": "1.1.0",
   "description": "riscript",
   "type": "module",
-  "main": "dist/index.cjs.js",
+  "main": "dist/index.cjs",
   "browser": "dist/index.iife.js",
   "exports": "./dist/index.js",
   "scripts": {
-    "lint": "standard | snazzy",
-    "lint:fix": "standard --fix | snazzy",
+    "lint": "semistandard | snazzy",
+    "lint:fix": "semistandard --fix | snazzy",
     "lint:test": "npm run lint && npm test",
     "test": "mocha \"test/**/*.tests.js\"",
     "test:coverage": "NODE_ENV=test c8 --all --include=lib/* --reporter=html --reporter=text mocha \"tests/**/*.tests.js\"",
     "test:watch": "npm test -- --watch",
     "docs": "jsdoc --readme README.md ./lib/*.js -d ./docs && jsdoc2md ./lib/*.js > ./api.md",
-    "build": "rollup --config rollup.config.js",
-    "build:full": "npm run docs && npm run build"
+    "build": "rm -rf dist/* && rollup --config rollup.config.js"
   },
   "babel": {
     "compact": false,
@@ -23,7 +22,7 @@
       "@babel/env"
     ],
     "env": {
-      "production" : {
+      "production": {
         "compact": false
       },
       "test": {
@@ -37,7 +36,10 @@
     "sourceMap": false,
     "instrument": false
   },
-  "standard": {
+  "semistandard": {
+    "env": [
+      "mocha"
+    ],
     "ignore": [
       "docs/",
       "node_modules/",
@@ -47,7 +49,7 @@
   "targets": "> 0.25%, not dead",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/jankapunkt/npm-package-template.git"
+    "url": "git+ssh://git@github.com/dhowe/riscript.git"
   },
   "keywords": [
     "npm",
@@ -55,14 +57,10 @@
     "template",
     "javascript"
   ],
-  "author": "Jan Küster <info@jankuester.com>",
-  "funding": {
-    "type": "PayPal",
-    "url": "https://paypal.me/kuesterjan"
-  },
+  "author": "Daniel Howe",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jankapunkt/npm-package-template/issues"
+    "url": "https://github.com/dhowe/riscript/issues"
   },
   "engines": {
     "node": ">= 14.x"
@@ -74,7 +72,7 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
-  "homepage": "https://github.com/jankapunkt/npm-package-template#readme",
+  "homepage": "https://github.com/dhowe/riscript#readme",
   "devDependencies": {
     "@babel/cli": "^7.23.0",
     "@babel/core": "^7.23.2",
@@ -83,6 +81,7 @@
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "c8": "^8.0.1",
     "chai": "^4.3.10",
     "cross-env": "7.0.3",
@@ -90,8 +89,8 @@
     "jsdoc-to-markdown": "^8.0.0",
     "mocha": "^10.2.0",
     "rollup": "^4.0.2",
-    "snazzy": "^9.0.0",
-    "standard": "^17.1.0"
+    "semistandard": "^17.0.0",
+    "snazzy": "^9.0.0"
   },
   "dependencies": {
     "chevrotain": "^11.0.3",

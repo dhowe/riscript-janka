@@ -1,8 +1,8 @@
 ## Classes
 
 <dl>
-<dt><a href="#SuperTool">SuperTool</a></dt>
-<dd><p>The super tool class. Holds a state and implements the execute command.</p>
+<dt><a href="#RiScript">RiScript</a></dt>
+<dd><p>The entry point class. Holds a state and implements the evaluate command.</p>
 </dd>
 </dl>
 
@@ -14,25 +14,25 @@
 </dd>
 </dl>
 
-<a name="SuperTool"></a>
+<a name="RiScript"></a>
 
-## SuperTool
-The super tool class. Holds a state and implements the execute command.
+## RiScript
+The entry point class. Holds a state and implements the evaluate command.
 
 **Kind**: global class  
 
-* [SuperTool](#SuperTool)
-    * [new SuperTool(state)](#new_SuperTool_new)
+* [RiScript](#RiScript)
+    * [new RiScript(state)](#new_RiScript_new)
     * _instance_
-        * [.state(value)](#SuperTool+state) ⇒ <code>String</code>
-        * [.execute()](#SuperTool+execute) ⇒ <code>string</code>
+        * [.state(value)](#RiScript+state) ⇒ <code>String</code>
+        * [.execute()](#RiScript+execute) ⇒ <code>string</code>
     * _static_
-        * [.states](#SuperTool.states) ⇒ <code>Object</code>
-        * [.validateState(value)](#SuperTool.validateState)
+        * [.states](#RiScript.states) ⇒ <code>Object</code>
+        * [.validateState(value)](#RiScript.validateState)
 
-<a name="new_SuperTool_new"></a>
+<a name="new_RiScript_new"></a>
 
-### new SuperTool(state)
+### new RiScript(state)
 Constructor initializes the state. If none is given, it defaults to {'great'}.
 
 **Throws**:
@@ -42,41 +42,41 @@ Constructor initializes the state. If none is given, it defaults to {'great'}.
 
 | Param | Description |
 | --- | --- |
-| state | one of the SuperTool.state values |
+| state | one of the RiScript.state values |
 
-<a name="SuperTool+state"></a>
+<a name="RiScript+state"></a>
 
-### superTool.state(value) ⇒ <code>String</code>
+### RiScript.state(value) ⇒ <code>String</code>
 Validates and sets a new state value if given and returns the updated value. If no defined value is given it just returns the
 current state value.
 
-**Kind**: instance method of [<code>SuperTool</code>](#SuperTool)  
+**Kind**: instance method of [<code>RiScript</code>](#RiScript)  
 **Returns**: <code>String</code> - the current state value  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | value | <code>String</code> \| <code>undefined</code> | optional state to be set. |
 
-<a name="SuperTool+execute"></a>
+<a name="RiScript+execute"></a>
 
-### superTool.execute() ⇒ <code>string</code>
+### RiScript.execute() ⇒ <code>string</code>
 Executes with the current internal state.
 
-**Kind**: instance method of [<code>SuperTool</code>](#SuperTool)  
+**Kind**: instance method of [<code>RiScript</code>](#RiScript)  
 **Returns**: <code>string</code> - the execution including the current state.  
-<a name="SuperTool.states"></a>
+<a name="RiScript.states"></a>
 
-### SuperTool.states ⇒ <code>Object</code>
-The possible states of the SuperTool.
+### RiScript.states ⇒ <code>Object</code>
+The possible states of the RiScript.
 
-**Kind**: static property of [<code>SuperTool</code>](#SuperTool)  
-<a name="SuperTool.validateState"></a>
+**Kind**: static property of [<code>RiScript</code>](#RiScript)  
+<a name="RiScript.validateState"></a>
 
-### SuperTool.validateState(value)
-Validates a state. To be valid, the value needs to be part of the {SuperTool.states}.
+### RiScript.validateState(value)
+Validates a state. To be valid, the value needs to be part of the {RiScript.states}.
 Throws an Error if invalid. Returns void / undefined if passed.
 
-**Kind**: static method of [<code>SuperTool</code>](#SuperTool)  
+**Kind**: static method of [<code>RiScript</code>](#RiScript)  
 **Throws**:
 
 - if state is not a valid state
