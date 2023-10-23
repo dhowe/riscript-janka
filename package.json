@@ -7,10 +7,11 @@
   "browser": "dist/index.iife.js",
   "exports": "./dist/index.js",
   "scripts": {
-    "lint": "eslint | snazzy **/*.js",
+    "lint": "semistandard | snazzy",
     "lint:fix": "semistandard --fix | snazzy",
     "lint:test": "npm run lint && npm test",
     "test": "mocha \"test/**/*.tests.js\"",
+    "test:iife": "mocha \"dist/riscript.tests.dist.js\"",
     "test:coverage": "NODE_ENV=test c8 --all --include=lib/* --reporter=html --reporter=text mocha \"tests/**/*.tests.js\"",
     "test:watch": "npm test -- --watch",
     "docs": "jsdoc --readme README.md ./lib/*.js -d ./docs && jsdoc2md ./lib/*.js > ./api.md",
