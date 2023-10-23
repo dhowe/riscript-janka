@@ -7,7 +7,7 @@
   "browser": "dist/index.iife.js",
   "exports": "./dist/index.js",
   "scripts": {
-    "lint": "semistandard | snazzy",
+    "lint": "eslint | snazzy **/*.js",
     "lint:fix": "semistandard --fix | snazzy",
     "lint:test": "npm run lint && npm test",
     "test": "mocha \"test/**/*.tests.js\"",
@@ -15,6 +15,13 @@
     "test:watch": "npm test -- --watch",
     "docs": "jsdoc --readme README.md ./lib/*.js -d ./docs && jsdoc2md ./lib/*.js > ./api.md",
     "build": "rm -rf dist/* && rollup --config rollup.config.js"
+  },
+  "eslintConfig": {
+    "extends": "semistandard",
+    "rules": {
+      "space-before-function-paren": "off",
+      "quotes": "off"
+    }
   },
   "babel": {
     "compact": false,
@@ -35,16 +42,6 @@
   "nyc": {
     "sourceMap": false,
     "instrument": false
-  },
-  "semistandard": {
-    "env": [
-      "mocha"
-    ],
-    "ignore": [
-      "docs/",
-      "node_modules/",
-      "dist/"
-    ]
   },
   "targets": "> 0.25%, not dead",
   "repository": {
@@ -78,6 +75,8 @@
     "@babel/core": "^7.23.2",
     "@babel/preset-env": "^7.23.2",
     "@babel/register": "^7.22.15",
+    "@eslint/eslintrc": "^2.1.2",
+    "@eslint/js": "^8.52.0",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
@@ -85,6 +84,12 @@
     "c8": "^8.0.1",
     "chai": "^4.3.10",
     "cross-env": "7.0.3",
+    "eslint": "^8.52.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-standard": "^5.0.0",
     "jsdoc": "^4.0.2",
     "jsdoc-to-markdown": "^8.0.0",
     "mocha": "^10.2.0",
