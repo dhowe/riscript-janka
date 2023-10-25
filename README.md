@@ -1,3 +1,5 @@
+[![Node Tests](https://github.com/dhowe/riscript-janka/actions/workflows/node.js.yml/badge.svg)](https://github.com/dhowe/riscript-janka/actions/workflows/node.js.yml)
+
 # RiScript
 
 ### Building
