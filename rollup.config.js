@@ -2,11 +2,28 @@ import { babel, getBabelOutputPlugin } from '@rollup/plugin-babel';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
+import versionInjector from 'rollup-plugin-version-injector';
+
+const onwarn = warning => {
+  // Silence circular dependency warning for chevrotain/chai
+  if (warning.code === 'CIRCULAR_DEPENDENCY'
+    && warning.ids.every(id => id.includes('chevrotain') || id.includes('chai'))) {
+    return
+  }
+  console.warn(`(!) ${warning.message}`)
+}
 
 export default [{
+  onwarn,
   input: 'lib/index.js',
   // external: ['rita'],
-  plugins: [nodeResolve(), commonjs()],
+  plugins: [nodeResolve(), commonjs(), versionInjector({
+    injectInTags: {
+      fileRegexp: /\.(js|cjs|html)$/,
+      dateFormat: 'isoDateTime',
+    },
+    logLevel: 'warn',
+  })],
   output: [
     {
       file: 'dist/riscript.js',
@@ -27,6 +44,7 @@ export default [{
   ]
 },
 { // browser
+  onwarn,
   input: 'lib/index.js',
   output: [{
     file: 'dist/riscript.iife.js',
@@ -47,10 +65,12 @@ export default [{
       exclude: 'node_modules/**',
       babelHelpers: 'bundled'
     }),
-    nodeResolve({ browser: true })
+    nodeResolve({ browser: true }),
+    versionInjector({ logLevel: 'warn' })
   ]
 },
 { // tests
+  onwarn,
   input: 'test/index.tests.js',
   output: {
     file: 'dist/riscript.tests.dist.js',
@@ -65,6 +85,7 @@ export default [{
       exclude: 'node_modules/**',
       babelHelpers: 'bundled'
     }),
-    nodeResolve({ browser: true })
+    nodeResolve({ browser: true }),
+    versionInjector({ logLevel: 'warn' })
   ]
 }];

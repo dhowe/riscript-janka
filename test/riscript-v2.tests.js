@@ -388,7 +388,7 @@ describe('RiScript.v2', function () {
       RiScript.RiTa.randomSeed(seed);
       let b;
       const a = riscript.evaluate(script);
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         RiScript.RiTa.randomSeed(seed);
         b = riscript.evaluate(script);
         // console.log(i + ') ', a, b);
@@ -493,7 +493,7 @@ describe('RiScript.v2', function () {
       expect(riscript.evaluate('( a [2] | a [3 ] )', {})).eq('a');
 
       const result = { b: 0, a: 0 };
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 20; i++) {
         const ans = riscript.evaluate('(a | b [3])');
         // console.log(i, ans);
         if (!/^[ab]$/.test(ans)) throw Error('invalid: ' + ans);

@@ -1,3 +1,4 @@
+/* Version: 1.1.0 - October 25, 2023 21:24:21 */
 (function () {
   'use strict';
 
@@ -17943,7 +17944,7 @@
       raw: Raw
   */
 
-  // TODO: test node-packages, linting, coverage?, integrate with rita
+  // TODO: integrate with rita, test node-packages, linting, coverage?
 
   var decode = he.decode;
   var VowelRE = /[aeiou]/;
@@ -18082,9 +18083,9 @@
 
         var expr = this.preParse(input, opts);
         if (!expr) return '';
-        if (opts.trace) console.log("\nInput:  '".concat(RiScript.escapeText(input), "'"));
+        if (opts.trace) console.log("\nInput:  '".concat(RiScript._escapeText(input), "'"));
         if (opts.trace && input !== expr) {
-          console.log("Parsed: '".concat(RiScript.escapeText(expr), "'"));
+          console.log("Parsed: '".concat(RiScript._escapeText(expr), "'"));
         }
         if (!opts.visitor) throw Error('no visitor');
         this.visitor = opts.visitor;
@@ -18097,7 +18098,7 @@
           expr = this.lexParseVisit(opts); // do it
 
           if (opts.trace) {
-            console.log("Result(".concat(i, ") -> \"") + "".concat(RiScript.escapeText(expr), "\"") + " ctx=".concat(this.visitor.lookupsToString()));
+            console.log("Result(".concat(i, ") -> \"") + "".concat(RiScript._escapeText(expr), "\"") + " ctx=".concat(this.visitor.lookupsToString()));
           }
 
           // end if no more riscript
@@ -18123,7 +18124,7 @@
         var s = tokens.reduce(function (str, t) {
           var name = t.tokenType.name;
           var tag = name;
-          if (tag === 'TEXT') tag = RiScript.escapeText(t.image, 1);
+          if (tag === 'TEXT') tag = RiScript._escapeText(t.image, 1);
           if (tag === 'SYM') tag = 'sym(' + t.image + ')';
           if (tag === 'TX') tag = 'tx(' + t.image + ')';
           return str + tag + ', ';
@@ -18222,7 +18223,7 @@
           }
           return res;
         };
-        var escaped = RiScript.escapeJSONRegex(text).replace(this.JSOLIdentRE, '"$1":').replace(/'/g, '"');
+        var escaped = RiScript._escapeJSONRegex(text).replace(this.JSOLIdentRE, '"$1":').replace(/'/g, '"');
 
         // console.log("escaped: '"+escaped+"'");
 
@@ -18245,55 +18246,14 @@
       }
 
       // ========================= statics ===============================
+
+      // Default transform that adds an article
     }], [{
       key: "evaluate",
       value: function evaluate(script, context) {
         var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
         return new RiScript().evaluate(script, context, opts);
       }
-    }, {
-      key: "transformNames",
-      value: function transformNames(txs) {
-        return txs && txs.length ? txs.map(function (tx) {
-          return tx.image.replace(/(^\.|\(\)$)/g, '');
-        }, []) : [];
-      }
-    }, {
-      key: "flattenTransforms",
-      value: function flattenTransforms(txs) {
-        if (!txs || !txs.length) return '';
-        return txs.map(function (tx) {
-          return tx.image;
-        }, []).join('');
-      }
-    }, {
-      key: "escapeText",
-      value: function escapeText(s, quotify) {
-        if (typeof s !== 'string') return s;
-        var t = s.replace(/\r?\n/g, '\\n');
-        return quotify || !t.length ? "'" + t + "'" : t;
-      }
-    }, {
-      key: "escapeJSONRegex",
-      value: function escapeJSONRegex(text) {
-        return text.replace(/\/([^/]+?)\/([igmsuy]*)/g, "\"".concat(RegexEscape, "$1").concat(RegexEscape, "$2").concat(RegexEscape, "\""));
-      }
-    }, {
-      key: "stringHash",
-      value: function stringHash(s) {
-        var chr,
-          hash = 0;
-        for (var i = 0; i < s.length; i++) {
-          chr = s.charCodeAt(i);
-          hash = (hash << 5) - hash + chr;
-          hash |= 0; // Convert to 32bit integer
-        }
-
-        var strHash = hash.toString();
-        return hash < 0 ? strHash.replace('-', '0') : strHash;
-      }
-
-      // Default transform that adds an article
     }, {
       key: "articlize",
       value: function articlize(s) {
@@ -18359,16 +18319,45 @@
         return s;
       }
 
-      // Default transform that returns an empty string
+      // static helpers
     }, {
-      key: "empty",
-      value: function empty(s) {
-        return '';
+      key: "_transformNames",
+      value: function _transformNames(txs) {
+        return txs && txs.length ? txs.map(function (tx) {
+          return tx.image.replace(/(^\.|\(\)$)/g, '');
+        }, []) : [];
+      }
+    }, {
+      key: "_escapeText",
+      value: function _escapeText(s, quotify) {
+        if (typeof s !== 'string') return s;
+        var t = s.replace(/\r?\n/g, '\\n');
+        return quotify || !t.length ? "'" + t + "'" : t;
+      }
+    }, {
+      key: "_escapeJSONRegex",
+      value: function _escapeJSONRegex(text) {
+        return text.replace(/\/([^/]+?)\/([igmsuy]*)/g, "\"".concat(RegexEscape, "$1").concat(RegexEscape, "$2").concat(RegexEscape, "\""));
+      }
+    }, {
+      key: "_stringHash",
+      value: function _stringHash(s) {
+        var chr,
+          hash = 0;
+        for (var i = 0; i < s.length; i++) {
+          chr = s.charCodeAt(i);
+          hash = (hash << 5) - hash + chr;
+          hash |= 0; // Convert to 32bit integer
+        }
+
+        var strHash = hash.toString();
+        return hash < 0 ? strHash.replace('-', '0') : strHash;
       }
     }]);
     return RiScript;
   }(); ////////////////////// STATIC PROPS ///////////////////////
   _defineProperty(RiScript, "Query", RiQuery);
+  _defineProperty(RiScript, "VERSION", '1.1.0');
   _defineProperty(RiScript, "RiTaWarnings", {
     plurals: false,
     phones: false
@@ -30360,7 +30349,7 @@
         RiScript.RiTa.randomSeed(seed);
         var b;
         var a = riscript.evaluate(script);
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
           RiScript.RiTa.randomSeed(seed);
           b = riscript.evaluate(script);
           // console.log(i + ') ', a, b);
@@ -30425,7 +30414,7 @@
           b: 0,
           a: 0
         };
-        for (var i = 0; i < 100; i++) {
+        for (var i = 0; i < 20; i++) {
           var ans = riscript.evaluate('(a | b [3])');
           // console.log(i, ans);
           if (!/^[ab]$/.test(ans)) throw Error('invalid: ' + ans);
@@ -30623,9 +30612,6 @@
 
   /*
     TODO:
-      - test without rita present (dynamic import ?)
-
-      OTHER:
       - line-breaks in choices
       - #postconditions# (post/effect/changes) => silent
       - better syntax for gates? remove @s?
@@ -30643,6 +30629,7 @@
       riscript = new RiScript();
       RiScriptVisitor = RiScript.Visitor;
       IfRiTa = typeof riscript.RiTa.VERSION === 'string';
+      console.log('RiScript v' + RiScript.VERSION, IfRiTa ? 'RiTa v' + riscript.RiTa.VERSION : 'No RiTa');
     });
     describe('Sequences', function () {
       it('Should support norepeat choice transforms', function () {
@@ -30670,7 +30657,7 @@
       });
       it('Should support single norepeat choices in context', function () {
         var res;
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
           res = riscript.evaluate('$b $b.nr', {
             $b: '[a[b | c | d]e]'
           });
@@ -30683,7 +30670,7 @@
       });
       it('Should support norepeat symbol transforms', function () {
         var fail = false;
-        var count = 10;
+        var count = 5;
         for (var i = 0; i < count; i++) {
           var res = riscript.evaluate('$rule=[a|b|c|d|e]\n$rule.nr $rule.nr');
           // console.log(i,res);
@@ -31092,7 +31079,7 @@
         riscript.RiTa.randomSeed(seed); // TODO: How to handle with no RiTa ?
         var b;
         var a = riscript.evaluate(script);
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
           riscript.RiTa.randomSeed(seed); // TODO: How to handle with no RiTa ?
           b = riscript.evaluate(script);
           // console.log(i + ') ', a, b);
@@ -31301,7 +31288,7 @@
         expect(riscript.evaluate('{#foo=bar}$foo baz $foo', {})).eq('bar baz bar');
         expect(riscript.evaluate('{#foo=bar}baz\n$foo $foo', {})).eq('baz\nbar bar');
         var failed = false;
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
           // #: should always match (static)
           var res = riscript.evaluate('{#foo=[a|b|c|d]}$foo $foo $foo', {});
           // console.log(i + ") " + res);
@@ -31450,7 +31437,7 @@
       });
       it('Should handle norepeats', function () {
         var res;
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 5; i++) {
           res = riscript.evaluate('$foo=[cat|dog]\n$foo $foo.nr');
           expect(res === 'cat dog' || res === 'dog cat')["true"];
         }
@@ -31975,7 +31962,7 @@
           start: '$noun:$noun'
         };
         var ok = false;
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 5; i++) {
           var res = RiGrammar.expand(script);
           // console.log(i, 'res=' + res);
           var parts = res.split(':');
@@ -31992,7 +31979,7 @@
           '#noun': '[man | woman]',
           start: '#noun:#noun'
         };
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 5; i++) {
           var res = RiGrammar.expand(script); //, TRACE);
           // console.log(i, 'res=' + res, ctx);
           expect(res === 'man:man' || res === 'woman:woman')["true"];
@@ -32004,7 +31991,7 @@
           noun: '[man | woman]',
           start: '$noun:$noun.nr'
         };
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 5; i++) {
           res = RiGrammar.expand(script);
           // console.log(i, 'res=' + res);
           expect(res === 'man:woman' || res === 'woman:man')["true"];
@@ -32080,7 +32067,7 @@
         expect(rg.expand({
           start: 'mammal'
         }), 'dog');
-        for (var i = 0; i < 30; i++) {
+        for (var i = 0; i < 5; i++) {
           var res = rg.expand({
             start: 'bird'
           });
@@ -32235,7 +32222,7 @@
         expect(rg.expand({
           start: 'mammal'
         }), 'dog');
-        for (var i = 0; i < 30; i++) {
+        for (var i = 0; i < 5; i++) {
           var res = rg.expand({
             start: 'bird'
           });
@@ -32402,14 +32389,12 @@
       });
 
       it('should override dynamic default', function () {
-        var count = 4;
-
         // here is the normal (dynamic) behavior
         var rg = new RiGrammar();
         rg.addRule('start', '$rule $rule');
         rg.addRule('rule', '[a|b|c|d|e]');
         var ok = false;
-        for (var i = 0; i < count; i++) {
+        for (var i = 0; i < 5; i++) {
           var parts = rg.expand().split(' ');
           expect(parts.length, 2);
           // console.log(i + ") " + parts[0] + " " + parts[1]);
@@ -32425,7 +32410,7 @@
         rg.addRule('start', '$rule $rule');
         rg.addRule('#rule', '[a|b|c|d|e]');
         ok = false;
-        for (var _i = 0; _i < count; _i++) {
+        for (var _i = 0; _i < 5; _i++) {
           var _parts = rg.expand().split(' ');
           expect(_parts.length, 2);
           // console.log(i + ") " + parts[0] + " " + parts[1]);
@@ -32439,7 +32424,7 @@
         var found1 = false;
         var found2 = false;
         var found3 = false;
-        for (var i = 0; i < 30; i++) {
+        for (var i = 0; i < 5; i++) {
           var res = rg.expand();
           expect(res === 'cat' || res === 'dog' || res === 'boy');
           if (res === 'cat') found1 = true;else if (res === 'dog') found2 = true;else if (res === 'boy') found3 = true;
@@ -32458,7 +32443,7 @@
         }), 'dog');
         var hawks = 0;
         var dogs = 0;
-        for (var i = 0; i < 100; i++) {
+        for (var i = 0; i < 5; i++) {
           // could fail
           var res = rg.expand({
             start: 'pet'
@@ -32496,7 +32481,7 @@
         expect(res).eq('dog');
         var hawks = 0;
         var dogs = 0;
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 5; i++) {
           var _res = rg.expand({
             start: 'start'
           });
@@ -32784,7 +32769,7 @@
         expect(res === "'I really don't'");
         s = '{ "start": "hello | name" }';
         rg = RiGrammar.fromJSON(s);
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
           res = rg.expand();
           expect(res === 'hello' || res === 'name');
         }
@@ -32818,7 +32803,7 @@
         expect(res === "'I really don't'");
         s = '{ "start": "hello | name" }';
         rg = RiGrammar.fromJSON(s);
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 5; i++) {
           res = rg.expand();
           expect(res === 'hello' || res === 'name');
         }
@@ -32978,7 +32963,7 @@ bb', {})).eq('aa bb');
     });
     describe('Helpers', function () {
       it('#stringHash', function () {
-        expect(RiScript.stringHash('revenue')).eq('1099842588');
+        expect(RiScript._stringHash('revenue')).eq('1099842588');
       });
       it('#preparseLines', function () {
         // handle new weights

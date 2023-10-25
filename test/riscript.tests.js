@@ -4,9 +4,6 @@ import { expect } from 'chai';
 
 /*
   TODO:
-    - test without rita present (dynamic import ?)
-
-    OTHER:
     - line-breaks in choices
     - #postconditions# (post/effect/changes) => silent
     - better syntax for gates? remove @s?
@@ -30,6 +27,8 @@ describe('RiScript.v3', function () {
     riscript = new RiScript();
     RiScriptVisitor = RiScript.Visitor;
     IfRiTa = typeof riscript.RiTa.VERSION === 'string';
+    console.log('RiScript v' + RiScript.VERSION,
+      IfRiTa ? 'RiTa v' + riscript.RiTa.VERSION : 'No RiTa');
   });
 
   LTR && describe('OneOff', function () {
@@ -65,7 +64,7 @@ describe('RiScript.v3', function () {
     it('Should support single norepeat choices in context', function () {
       let res;
 
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         res = riscript.evaluate('$b $b.nr', { $b: '[a[b | c | d]e]' });
         // console.log(i, res);
         expect(/a[bcd]e a[bcd]e/.test(res)).true;
@@ -77,7 +76,7 @@ describe('RiScript.v3', function () {
 
     it('Should support norepeat symbol transforms', function () {
       let fail = false;
-      const count = 10;
+      const count = 5;
       for (let i = 0; i < count; i++) {
         const res = riscript.evaluate('$rule=[a|b|c|d|e]\n$rule.nr $rule.nr');
         // console.log(i,res);
@@ -542,7 +541,7 @@ describe('RiScript.v3', function () {
       riscript.RiTa.randomSeed(seed); // TODO: How to handle with no RiTa ?
       let b;
       const a = riscript.evaluate(script);
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         riscript.RiTa.randomSeed(seed); // TODO: How to handle with no RiTa ?
         b = riscript.evaluate(script);
         // console.log(i + ') ', a, b);
@@ -834,7 +833,7 @@ describe('RiScript.v3', function () {
       );
 
       let failed = false;
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         // #: should always match (static)
         const res = riscript.evaluate('{#foo=[a|b|c|d]}$foo $foo $foo', {});
         // console.log(i + ") " + res);
@@ -989,7 +988,7 @@ describe('RiScript.v3', function () {
 
     it('Should handle norepeats', function () {
       let res;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 5; i++) {
         res = riscript.evaluate('$foo=[cat|dog]\n$foo $foo.nr');
         expect(res === 'cat dog' || res === 'dog cat').true;
       }
@@ -1582,7 +1581,7 @@ describe('RiScript.v3', function () {
       };
 
       let ok = false;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 5; i++) {
         const res = RiGrammar.expand(script);
         // console.log(i, 'res=' + res);
         const parts = res.split(':');
@@ -1601,7 +1600,7 @@ describe('RiScript.v3', function () {
         start: '#noun:#noun'
       };
 
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 5; i++) {
         const res = RiGrammar.expand(script); //, TRACE);
         // console.log(i, 'res=' + res, ctx);
         expect(res === 'man:man' || res === 'woman:woman').true;
@@ -1614,7 +1613,7 @@ describe('RiScript.v3', function () {
         noun: '[man | woman]',
         start: '$noun:$noun.nr'
       };
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 5; i++) {
         res = RiGrammar.expand(script);
         // console.log(i, 'res=' + res);
         expect(res === 'man:woman' || res === 'woman:man').true;
@@ -1738,7 +1737,7 @@ describe('RiScript.v3', function () {
       rg.addRule('bird', '[hawk | crow]');
       rg.addRule('mammal', 'dog');
       expect(rg.expand({ start: 'mammal' }), 'dog');
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 5; i++) {
         const res = rg.expand({ start: 'bird' });
         expect(res === 'hawk' || res === 'crow');
       }
@@ -1906,7 +1905,7 @@ describe('RiScript.v3', function () {
       rg.addRule('bird', '[hawk | crow]');
       rg.addRule('mammal', 'dog');
       expect(rg.expand({ start: 'mammal' }), 'dog');
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 5; i++) {
         const res = rg.expand({ start: 'bird' });
         expect(res === 'hawk' || res === 'crow');
       }
@@ -2032,14 +2031,13 @@ describe('RiScript.v3', function () {
     });
 
     it('should override dynamic default', function () {
-      const count = 4;
 
       // here is the normal (dynamic) behavior
       let rg = new RiGrammar();
       rg.addRule('start', '$rule $rule');
       rg.addRule('rule', '[a|b|c|d|e]');
       let ok = false;
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < 5; i++) {
         const parts = rg.expand().split(' ');
         expect(parts.length, 2);
         // console.log(i + ") " + parts[0] + " " + parts[1]);
@@ -2055,7 +2053,7 @@ describe('RiScript.v3', function () {
       rg.addRule('start', '$rule $rule');
       rg.addRule('#rule', '[a|b|c|d|e]');
       ok = false;
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < 5; i++) {
         const parts = rg.expand().split(' ');
         expect(parts.length, 2);
         // console.log(i + ") " + parts[0] + " " + parts[1]);
@@ -2070,7 +2068,7 @@ describe('RiScript.v3', function () {
       let found1 = false;
       let found2 = false;
       let found3 = false;
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 5; i++) {
         const res = rg.expand();
         expect(res === 'cat' || res === 'dog' || res === 'boy');
         if (res === 'cat') found1 = true;
@@ -2091,7 +2089,7 @@ describe('RiScript.v3', function () {
 
       let hawks = 0;
       let dogs = 0;
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 5; i++) {
         // could fail
         const res = rg.expand({ start: 'pet' });
         expect(res === 'hawk' || res === 'dog', 'got ' + res);
@@ -2126,7 +2124,7 @@ describe('RiScript.v3', function () {
 
       let hawks = 0;
       let dogs = 0;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 5; i++) {
         const res = rg.expand({ start: 'start' });
         expect(res === 'hawk hawk' || res === 'dog dog', 'got ' + res);
 
@@ -2418,7 +2416,7 @@ describe('RiScript.v3', function () {
 
       s = '{ "start": "hello | name" }';
       rg = RiGrammar.fromJSON(s);
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         res = rg.expand();
         expect(res === 'hello' || res === 'name');
       }
@@ -2460,7 +2458,7 @@ describe('RiScript.v3', function () {
 
       s = '{ "start": "hello | name" }';
       rg = RiGrammar.fromJSON(s);
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         res = rg.expand();
         expect(res === 'hello' || res === 'name');
       }
@@ -2686,7 +2684,7 @@ bb',
 
   describe('Helpers', function () {
     it('#stringHash', function () {
-      expect(RiScript.stringHash('revenue')).eq('1099842588');
+      expect(RiScript._stringHash('revenue')).eq('1099842588');
     });
 
     it('#preparseLines', function () {

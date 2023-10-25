@@ -1,3 +1,4 @@
+/* Version: 1.1.0 - October 25, 2023 21:24:08 */
 var RiScript = (function () {
   'use strict';
 
@@ -17918,7 +17919,7 @@ var RiScript = (function () {
       raw: Raw
   */
 
-  // TODO: test node-packages, linting, coverage?, integrate with rita
+  // TODO: integrate with rita, test node-packages, linting, coverage?
 
   var decode = he.decode;
   var VowelRE = /[aeiou]/;
@@ -18057,9 +18058,9 @@ var RiScript = (function () {
 
         var expr = this.preParse(input, opts);
         if (!expr) return '';
-        if (opts.trace) console.log("\nInput:  '".concat(RiScript.escapeText(input), "'"));
+        if (opts.trace) console.log("\nInput:  '".concat(RiScript._escapeText(input), "'"));
         if (opts.trace && input !== expr) {
-          console.log("Parsed: '".concat(RiScript.escapeText(expr), "'"));
+          console.log("Parsed: '".concat(RiScript._escapeText(expr), "'"));
         }
         if (!opts.visitor) throw Error('no visitor');
         this.visitor = opts.visitor;
@@ -18072,7 +18073,7 @@ var RiScript = (function () {
           expr = this.lexParseVisit(opts); // do it
 
           if (opts.trace) {
-            console.log("Result(".concat(i, ") -> \"") + "".concat(RiScript.escapeText(expr), "\"") + " ctx=".concat(this.visitor.lookupsToString()));
+            console.log("Result(".concat(i, ") -> \"") + "".concat(RiScript._escapeText(expr), "\"") + " ctx=".concat(this.visitor.lookupsToString()));
           }
 
           // end if no more riscript
@@ -18098,7 +18099,7 @@ var RiScript = (function () {
         var s = tokens.reduce(function (str, t) {
           var name = t.tokenType.name;
           var tag = name;
-          if (tag === 'TEXT') tag = RiScript.escapeText(t.image, 1);
+          if (tag === 'TEXT') tag = RiScript._escapeText(t.image, 1);
           if (tag === 'SYM') tag = 'sym(' + t.image + ')';
           if (tag === 'TX') tag = 'tx(' + t.image + ')';
           return str + tag + ', ';
@@ -18197,7 +18198,7 @@ var RiScript = (function () {
           }
           return res;
         };
-        var escaped = RiScript.escapeJSONRegex(text).replace(this.JSOLIdentRE, '"$1":').replace(/'/g, '"');
+        var escaped = RiScript._escapeJSONRegex(text).replace(this.JSOLIdentRE, '"$1":').replace(/'/g, '"');
 
         // console.log("escaped: '"+escaped+"'");
 
@@ -18220,55 +18221,14 @@ var RiScript = (function () {
       }
 
       // ========================= statics ===============================
+
+      // Default transform that adds an article
     }], [{
       key: "evaluate",
       value: function evaluate(script, context) {
         var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
         return new RiScript().evaluate(script, context, opts);
       }
-    }, {
-      key: "transformNames",
-      value: function transformNames(txs) {
-        return txs && txs.length ? txs.map(function (tx) {
-          return tx.image.replace(/(^\.|\(\)$)/g, '');
-        }, []) : [];
-      }
-    }, {
-      key: "flattenTransforms",
-      value: function flattenTransforms(txs) {
-        if (!txs || !txs.length) return '';
-        return txs.map(function (tx) {
-          return tx.image;
-        }, []).join('');
-      }
-    }, {
-      key: "escapeText",
-      value: function escapeText(s, quotify) {
-        if (typeof s !== 'string') return s;
-        var t = s.replace(/\r?\n/g, '\\n');
-        return quotify || !t.length ? "'" + t + "'" : t;
-      }
-    }, {
-      key: "escapeJSONRegex",
-      value: function escapeJSONRegex(text) {
-        return text.replace(/\/([^/]+?)\/([igmsuy]*)/g, "\"".concat(RegexEscape, "$1").concat(RegexEscape, "$2").concat(RegexEscape, "\""));
-      }
-    }, {
-      key: "stringHash",
-      value: function stringHash(s) {
-        var chr,
-          hash = 0;
-        for (var i = 0; i < s.length; i++) {
-          chr = s.charCodeAt(i);
-          hash = (hash << 5) - hash + chr;
-          hash |= 0; // Convert to 32bit integer
-        }
-
-        var strHash = hash.toString();
-        return hash < 0 ? strHash.replace('-', '0') : strHash;
-      }
-
-      // Default transform that adds an article
     }, {
       key: "articlize",
       value: function articlize(s) {
@@ -18334,16 +18294,45 @@ var RiScript = (function () {
         return s;
       }
 
-      // Default transform that returns an empty string
+      // static helpers
     }, {
-      key: "empty",
-      value: function empty(s) {
-        return '';
+      key: "_transformNames",
+      value: function _transformNames(txs) {
+        return txs && txs.length ? txs.map(function (tx) {
+          return tx.image.replace(/(^\.|\(\)$)/g, '');
+        }, []) : [];
+      }
+    }, {
+      key: "_escapeText",
+      value: function _escapeText(s, quotify) {
+        if (typeof s !== 'string') return s;
+        var t = s.replace(/\r?\n/g, '\\n');
+        return quotify || !t.length ? "'" + t + "'" : t;
+      }
+    }, {
+      key: "_escapeJSONRegex",
+      value: function _escapeJSONRegex(text) {
+        return text.replace(/\/([^/]+?)\/([igmsuy]*)/g, "\"".concat(RegexEscape, "$1").concat(RegexEscape, "$2").concat(RegexEscape, "\""));
+      }
+    }, {
+      key: "_stringHash",
+      value: function _stringHash(s) {
+        var chr,
+          hash = 0;
+        for (var i = 0; i < s.length; i++) {
+          chr = s.charCodeAt(i);
+          hash = (hash << 5) - hash + chr;
+          hash |= 0; // Convert to 32bit integer
+        }
+
+        var strHash = hash.toString();
+        return hash < 0 ? strHash.replace('-', '0') : strHash;
       }
     }]);
     return RiScript;
   }(); ////////////////////// STATIC PROPS ///////////////////////
   _defineProperty(RiScript, "Query", RiQuery);
+  _defineProperty(RiScript, "VERSION", '1.1.0');
   _defineProperty(RiScript, "RiTaWarnings", {
     plurals: false,
     phones: false

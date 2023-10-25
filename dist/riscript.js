@@ -1,3 +1,4 @@
+/* Version: 1.1.0 - October 25, 2023 21:23:50 */
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 function getDefaultExportFromCjs (x) {
@@ -16837,6 +16838,7 @@ class RiScriptParser extends CstParser {
 class BaseVisitor {
   constructor(riScript) {
     this.input = 0;
+    
     this.path = '';
     this.tracePath = true;
     this.scripting = riScript;
@@ -17565,7 +17567,7 @@ class RiScriptVisitor extends BaseVisitor {
     raw: Raw
 */
 
-// TODO: test node-packages, linting, coverage?, integrate with rita
+// TODO: integrate with rita, test node-packages, linting, coverage?
 
 const { decode } = he;
 const VowelRE = /[aeiou]/;
@@ -17609,6 +17611,7 @@ class RiQuery extends Query {
 
 class RiScript {
   static Query = RiQuery;
+  static VERSION = '1.1.0';
 
   static RiTaWarnings = { plurals: false, phones: false };
 
@@ -17690,9 +17693,9 @@ class RiScript {
     let expr = this.preParse(input, opts);
     if (!expr) return '';
 
-    if (opts.trace) console.log(`\nInput:  '${RiScript.escapeText(input)}'`);
+    if (opts.trace) console.log(`\nInput:  '${RiScript._escapeText(input)}'`);
     if (opts.trace && input !== expr) {
-      console.log(`Parsed: '${RiScript.escapeText(expr)}'`);
+      console.log(`Parsed: '${RiScript._escapeText(expr)}'`);
     }
 
     if (!opts.visitor) throw Error('no visitor');
@@ -17708,7 +17711,7 @@ class RiScript {
       expr = this.lexParseVisit(opts); // do it
 
       if (opts.trace) {
-        console.log(`Result(${i}) -> "` + `${RiScript.escapeText(expr)}"`
+        console.log(`Result(${i}) -> "` + `${RiScript._escapeText(expr)}"`
           + ` ctx=${this.visitor.lookupsToString()}`);
       }
 
@@ -17734,7 +17737,7 @@ class RiScript {
     let s = tokens.reduce((str, t) => {
       let { name } = t.tokenType;
       let tag = name;
-      if (tag === 'TEXT') tag = RiScript.escapeText(t.image, 1);
+      if (tag === 'TEXT') tag = RiScript._escapeText(t.image, 1);
       if (tag === 'SYM') tag = 'sym(' + t.image + ')';
       if (tag === 'TX') tag = 'tx(' + t.image + ')';
       return str + tag + ', ';
@@ -17839,7 +17842,7 @@ class RiScript {
       }
       return res;
     };
-    let escaped = RiScript.escapeJSONRegex(text)
+    let escaped = RiScript._escapeJSONRegex(text)
       .replace(this.JSOLIdentRE, '"$1":')
       .replace(/'/g, '"');
 
@@ -17862,41 +17865,6 @@ class RiScript {
 
   // ========================= statics ===============================
 
-  static transformNames(txs) {
-    return txs && txs.length
-      ? txs.map((tx) => tx.image.replace(/(^\.|\(\)$)/g, ''), [])
-      : [];
-  }
-
-  static flattenTransforms(txs) {
-    if (!txs || !txs.length) return '';
-    return txs.map((tx) => tx.image, []).join('');
-  }
-
-  static escapeText(s, quotify) {
-    if (typeof s !== 'string') return s;
-    let t = s.replace(/\r?\n/g, '\\n');
-    return quotify || !t.length ? "'" + t + "'" : t;
-  }
-
-  static escapeJSONRegex(text) {
-    return text.replace(
-      /\/([^/]+?)\/([igmsuy]*)/g,
-      `"${RegexEscape}$1${RegexEscape}$2${RegexEscape}"`
-    );
-  }
-
-  static stringHash(s) {
-    let chr,
-      hash = 0;
-    for (let i = 0; i < s.length; i++) {
-      chr = s.charCodeAt(i);
-      hash = (hash << 5) - hash + chr;
-      hash |= 0; // Convert to 32bit integer
-    }
-    let strHash = hash.toString();
-    return hash < 0 ? strHash.replace('-', '0') : strHash;
-  }
 
   // Default transform that adds an article
   static articlize(s) {
@@ -17953,9 +17921,37 @@ class RiScript {
     return s;
   }
 
-  // Default transform that returns an empty string
-  static empty(s) {
-    return '';
+  // static helpers
+
+  static _transformNames(txs) {
+    return txs && txs.length
+      ? txs.map((tx) => tx.image.replace(/(^\.|\(\)$)/g, ''), [])
+      : [];
+  }
+
+  static _escapeText(s, quotify) {
+    if (typeof s !== 'string') return s;
+    let t = s.replace(/\r?\n/g, '\\n');
+    return quotify || !t.length ? "'" + t + "'" : t;
+  }
+
+  static _escapeJSONRegex(text) {
+    return text.replace(
+      /\/([^/]+?)\/([igmsuy]*)/g,
+      `"${RegexEscape}$1${RegexEscape}$2${RegexEscape}"`
+    );
+  }
+
+  static _stringHash(s) {
+    let chr,
+      hash = 0;
+    for (let i = 0; i < s.length; i++) {
+      chr = s.charCodeAt(i);
+      hash = (hash << 5) - hash + chr;
+      hash |= 0; // Convert to 32bit integer
+    }
+    let strHash = hash.toString();
+    return hash < 0 ? strHash.replace('-', '0') : strHash;
   }
 }
 

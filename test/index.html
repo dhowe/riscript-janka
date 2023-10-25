@@ -9,11 +9,7 @@
     <script src="../node_modules/mocha/mocha.js"></script>
     <script src="../node_modules/chai/chai.js"></script>
     <script>mocha.setup('bdd')</script>
-
-    <!-- load code you want to test here -->
-    <script type="module" src="../dist/riscript.tests.iife.js"></script>
-    <!-- load your test files here -->
-
+    <script type="module" src="../dist/riscript.tests.dist.js"></script>
     <script type="module">
       mocha.checkLeaks();
       mocha.run();
