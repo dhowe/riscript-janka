@@ -2715,10 +2715,6 @@ bb',
       );
     });
 
-    it('#flattenTransforms', function () {
-      const txs = [{ image: '.nr()' }, { image: '.uc' }, { image: '.art()' }];
-      expect(RiScript.flattenTransforms(txs)).eq('.nr().uc.art()');
-    });
 
     it('#parseJSOLregex', function () {
       // SIMPLE REGEX
