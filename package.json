@@ -65,10 +65,9 @@
   },
   "files": [
     "dist",
-    "API.md",
+    "api.md",
     "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
+    "LICENSE"
   ],
   "homepage": "https://github.com/dhowe/riscript#readme",
   "devDependencies": {
